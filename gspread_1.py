@@ -1,4 +1,4 @@
-# Check In Time Dashboard Gspread
+# Dashboard Gspread
 import os
 import json
 import time
@@ -65,11 +65,8 @@ def get_user_df(url, api_key, now, query_id, orgname):
     # Preprocessing the data, Removing users without performance role, and arranging the columns suitable to the report needs
     user_df = user_df[user_df['performance_role'].notnull()]
     user_df = user_df[(user_df['state'] == 'active') | (user_df['state'] == 'pending')]
-    user_df_report = user_df[['email', 'id', 'name', 'state', 'Manager/Report to Name', 'direktorat', 'department']]
-    user_df_raw = user_df[['id', 'email', 'name', 'state',
-                           'Registered at', 'First login at', 'performance_role',
-                           'job_title', 'Manager/Report to Position', 'Manager/Report to Name',
-                           'direktorat', 'department', 'division', 'salary_level', 'region', 'city']]
+    user_df_report = user_df[[...]]
+    user_df_raw = user_df[[...]]
 
     # Splitting the data to raw and report
     return user_df_report, user_df_raw
@@ -80,32 +77,13 @@ def get_activity_df(user_df_update, url, api_key, now, query_id_w):
     result_w = get_fresh_query_result(url, query_id_w, api_key, params_w)
 
     # Column arrangement
-    c_weekly = ['user_id',
-                'name',
-                'direktorat',
-                'department',
-                'division',
-                'create_goal',
-                'complete_goal',
-                'update_goal',
-                'edit_goal',
-                'comment_goal',
-                'review_goal',
-                'goal_alignment',
-                'total_recognition_given',
-                'total_feedback_given',
-                'create_task',
-                'complete_task',
-                'update_task',
-                'edit_task',
-                'comment_task',
-                'review_task']
+    c_weekly = [...] #Example Columns
 
     w_df = pd.DataFrame(result_w)
     activity_df_raw = w_df[c_weekly]
 
-    w_df['Total Activity'] = 'Aktif'
-    w_df_update = w_df[['user_id', 'Total Activity']]
+    w_df[...] = ...
+    w_df_update = w_df[[...]]
 
     activity_df = user_df_update[['id']]
     activity_df_report = activity_df.join(w_df_update.set_index('user_id'), on='id', how='left')
@@ -120,6 +98,7 @@ def get_obj_df(url, api_key, now, query_id2, orgname):
 
     obj_df = pd.DataFrame(result_2)
 
+    #Arbitrary Calculation Requests
     obj_df['Progress Bar'] = 0
     for i in range(obj_df.shape[0]):
         if obj_df['calculation_type'][i] == 'less_is_better':
@@ -163,26 +142,15 @@ def get_obj_df(url, api_key, now, query_id2, orgname):
     obj_df['Status Progress'] = np.select(conditions, values)
 
     obj_df_edit = obj_df[
-        ['Goal ID', 'Goal Type', 'Owner Name', 'Owner ID',
-         'Directorate', 'Due Date', 'Status Progress', 'Goal State']]
+        [...]] Column Names
     obj_df_edit = obj_df_edit.drop_duplicates()
 
     obj_df_raw = obj_df[
-        ['Goal ID', 'Goal Name', 'objective_type', 'Goal Type', 'Weight', 'Complexity', 'description', 'Target',
-         'Current Value', 'Metrics', 'label', 'Creator Name', 'Owner Name', 'Owner Email'
-            , 'Reviewer Name', 'Goal State', 'followers', 'Date Created', 'Start Date', 'Due Date', 'Completion Date',
-         'Review Date', 'Overdue Status', 'recurrence', 'Last Activity',
-         'Last Updated At', 'review_comment', 'Average Score', 'review_score', 'Status Progress', 'Owner ID',
-         'Directorate']]
+        [...]] #Column Names
     obj_df_raw = obj_df_raw.drop_duplicates(
-        subset=['Goal ID', 'Goal Type', 'Owner Name', 'Owner Email', 'Owner ID', 'Directorate', 'Due Date',
-                'Goal State', 'Status Progress'])
+        subset=[...]) #Column Names
     obj_df_raw = obj_df_raw[
-        ['Goal ID', 'Goal Name', 'objective_type', 'Goal Type', 'Weight', 'Complexity', 'description', 'Target',
-         'Current Value', 'Metrics', 'label', 'Creator Name', 'Owner Name', 'Owner Email'
-            , 'Reviewer Name', 'Goal State', 'followers', 'Date Created', 'Start Date', 'Due Date', 'Completion Date',
-         'Review Date', 'Overdue Status', 'recurrence', 'Last Activity',
-         'Last Updated At', 'review_comment', 'Average Score', 'review_score', 'Goal State', 'Status Progress']]
+        []] #Column Names
 
     return obj_df_edit, obj_df_raw
 
@@ -194,35 +162,33 @@ def get_review_df(url, api_key, cycle_id, user_df, query_id, orgname):
 
     assignment_df = pd.DataFrame(result)
 
-    self_review_df = assignment_df[assignment_df['type'].isin(['self_review'])]
-    manager_review_df = assignment_df[assignment_df['type'].isin(['manager_review'])]
+    self_review_df = assignment_df[assignment_df['type'].isin([...])]
+    manager_review_df = assignment_df[assignment_df['type'].isin([...])]
 
-    self_review_df = self_review_df[['Reviewee Email', 'state']]
-    manager_review_df = manager_review_df[['Reviewee Email', 'state', 'Reviewer Email', 'Reviewer Name']]
+    self_review_df = self_review_df[[...]]
+    manager_review_df = manager_review_df[[...]]
 
     manager_review_df = manager_review_df[
-        (manager_review_df['state'] == 'in_progress') | (manager_review_df['state'] == 'done')]
+       ...]
 
-    self_review_df.replace({"in_progress": "Not Done", "done": "Done", "incomplete": "Not Done"}, inplace=True)
-    manager_review_df.replace({"in_progress": "Not Done", "done": "Done", "incomplete": "Not Done"}, inplace=True)
+    self_review_df.replace({...}, inplace=True)
+    manager_review_df.replace({...}, inplace=True)
 
-    review_df = user_df[['id', 'email', 'name', 'direktorat', 'department']]
-    review_df = review_df.join(self_review_df.set_index('Reviewee Email'), on='email', how='inner')
-    review_df.rename(columns={'state': 'Self Review Progress', 'direktorat': 'Reviewee Directorate',
-                              'department': 'Reviewee Department'}, inplace=True)
-    review_df = review_df.join(manager_review_df.set_index('Reviewee Email'), on='email', how='left')
-    review_df.rename(columns={'state': 'Manager Review Progress'}, inplace=True)
-    review_df = review_df.join(user_df[['email', 'direktorat']].set_index('email'), on='Reviewer Email', how='left')
-    review_df.rename(columns={'direktorat': 'Reviewer Directorate'}, inplace=True)
-    review_df = review_df[['id', 'email', 'name', 'Reviewee Directorate', 'Reviewee Department', 'Self Review Progress',
-                           'Reviewer Name', 'Reviewer Directorate', 'Manager Review Progress']]
+    review_df = user_df[[...]]
+    review_df = review_df.join(self_review_df.set_index(...), on='email', how='inner')
+    review_df.rename(columns={...}, inplace=True)
+    review_df = review_df.join(manager_review_df.set_index(...), on='email', how='left')
+    review_df.rename(columns={'state': ...}, inplace=True)
+    review_df = review_df.join(user_df[[...]].set_index('email'), on='Reviewer Email', how='left')
+    review_df.rename(columns={...}, inplace=True)
+    review_df = review_df[[...]]
 
     return review_df
 
 
 def main():
     service_acc_file = os.getenv('SERVICE_ACC')
-    spread_id = os.getenv('PARAGON_SHEET_ID')
+    spread_id = os.getenv('SHEET_ID')
 
     gc = gspread.service_account(filename=service_acc_file)
     sh = gc.open_by_key(spread_id)
@@ -233,12 +199,12 @@ def main():
     url = os.getenv('REDASH_URL')
     api_key = os.getenv('API_KEY')
     rev = os.getenv('ONGOING_REVIEW')
-    orgname = os.getenv('CIT_ORGNAME')
+    orgname = os.getenv('ORGNAME')
 
     ## Query Env Variable
-    user_query = os.getenv('CIT_USER_QUERY_ID')  # 375
-    act_query = os.getenv('CIT_ACTIVITY_QUERY_ID')  # 321
-    obj_query = os.getenv('CIT_OBJECTIVE_QUERY_ID')  # 422
+    user_query = os.getenv('USER_QUERY_ID')  
+    act_query = os.getenv('ACTIVITY_QUERY_ID')  
+    obj_query = os.getenv('OBJECTIVE_QUERY_ID') 
 
     print("Start Fetching Queries from Redash")
     user_data, user_raw = get_user_df(url, api_key, now, user_query, orgname)
@@ -282,9 +248,9 @@ def main():
     print("Raw Data - Objective sheet Updated")
 
     if rev == 'TRUE':
-        review_query = os.getenv('CIT_REVIEW_QUERY_ID')  # 400
-        review_cycle = os.getenv('CIT_REVIEW_CYCLE_ID')
-        rev_period = os.getenv('CIT_REVIEW_PERIOD')
+        review_query = os.getenv('REVIEW_QUERY_ID')  # 400
+        review_cycle = os.getenv('REVIEW_CYCLE_ID')
+        rev_period = os.getenv('REVIEW_PERIOD')
         review_data = get_review_df(url, api_key, review_cycle, user_data, review_query, orgname)
         print("Review Data Fetched!")
 
